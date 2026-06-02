@@ -185,8 +185,9 @@ def create_app(config_class=Config):
     return app
 
 
+application = create_app()
+
 if __name__ == "__main__":
-    application = create_app()
     application.run(
         debug=application.config.get("DEBUG", False),
         host="0.0.0.0",
