@@ -1,0 +1,53 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<h1 class="mb-4">Fornecedores</h1>
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card-neo p-3">
+      <h5>Novo fornecedor</h5>
+      <form method="post">{{ form.hidden_tag() }}
+        <label class="form-label">Nome</label>{{ form.name(class_='form-control mb-2') }}
+        <label class="form-label">Telefone</label>{{ form.phone(class_='form-control mb-2') }}
+        <label class="form-label">Email</label>{{ form.email(class_='form-control mb-2') }}
+        <label class="form-label">Prazo médio (dias)</label>{{ form.avg_shipping_days(class_='form-control mb-2') }}
+        <label class="form-label">Observações</label>{{ form.notes(class_='form-control mb-3', rows=3) }}
+        <button class="btn btn-neon w-100">Criar</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-md-8">
+    <div class="card-neo p-3 table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Telefone</th>
+            <th>Email</th>
+            <th>Prazo</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in items %}
+          <tr>
+            <td>{{ s.name }}</td>
+            <td>{{ s.phone }}</td>
+            <td>{{ s.email }}</td>
+            <td>{{ s.avg_shipping_days }} dias</td>
+            <td class="text-end">
+              <form method="post" action="{{ url_for('admin.supplier_delete', sid=s.id) }}"
+                onsubmit="return confirm('Excluir?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button
+                  class="btn btn-sm btn-outline-danger">×</button>
+              </form>
+            </td>
+          </tr>
+          {% else %}<tr>
+            <td colspan="5" class="text-muted">Sem fornecedores.</td>
+          </tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,187 @@
+<div class="order-actions-card">
+  <h4>Precisa de ajuda com este pedido?</h4>
+  <p class="text-muted">Seu pedido está <strong class="status-{{ order.status }}">{{ order.status }}</strong>. Enquanto
+    aguarda aprovação, você pode:</p>
+
+  <div class="order-actions-grid">
+    <!-- Botão para solicitar alteração -->
+    <button type="button" class="btn-action" data-bs-toggle="modal" data-bs-target="#modalAlterar">
+      <span class="action-icon">✏️</span>
+      <div class="action-info">
+        <strong>Solicitar alteração</strong>
+        <small>Endereço, itens ou dados do pedido</small>
+      </div>
+    </button>
+
+    <!-- Botão para solicitar cancelamento -->
+    <button type="button" class="btn-action" data-bs-toggle="modal" data-bs-target="#modalCancelar">
+      <span class="action-icon">❌</span>
+      <div class="action-info">
+        <strong>Solicitar cancelamento</strong>
+        <small>Cancelar pedido antes da aprovação</small>
+      </div>
+    </button>
+
+    <!-- Botão do WhatsApp -->
+    <a href="https://wa.me/{{ WHATSAPP_NUMBER }}?text=Olá! Preciso de ajuda com o pedido {{ order.code }}"
+      target="_blank" class="btn-action whatsapp">
+      <span class="action-icon">💬</span>
+      <div class="action-info">
+        <strong>Falar no WhatsApp</strong>
+        <small>Atendimento rápido</small>
+      </div>
+    </a>
+  </div>
+</div>
+
+<!-- MODAL: Solicitar Alteração -->
+<div class="modal fade" id="modalAlterar" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-neon">
+      <div class="modal-header">
+        <h5 class="modal-title">✏️ Solicitar alteração do pedido</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('shop.request_order_change', order_id=order.id) }}" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">Tipo de alteração</label>
+            <select name="change_type" class="form-select" required>
+              <option value="">Selecione...</option>
+              <option value="endereco">Alterar endereço de entrega</option>
+              <option value="itens">Alterar itens do pedido</option>
+              <option value="dados">Alterar dados do cliente</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Descreva a alteração desejada</label>
+            <textarea name="message" class="form-control" rows="4" required
+              placeholder="Ex: Gostaria de alterar o endereço para..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-neon">Enviar solicitação</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Solicitar Cancelamento -->
+<div class="modal fade" id="modalCancelar" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content modal-neon">
+      <div class="modal-header">
+        <h5 class="modal-title">❌ Solicitar cancelamento</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('shop.request_order_cancellation', order_id=order.id) }}" method="POST">
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="alert alert-warning">
+            ⚠️ Tem certeza que deseja cancelar o pedido <strong>{{ order.code }}</strong>?
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Motivo do cancelamento</label>
+            <select name="reason" class="form-select" required>
+              <option value="">Selecione...</option>
+              <option value="mudou_ideia">Mudei de ideia</option>
+              <option value="encontrei_mais_barato">Encontrei mais barato em outro lugar</option>
+              <option value="prazo_entrega">Prazo de entrega muito longo</option>
+              <option value="erro_pedido">Errei no pedido (produto/quantidade)</option>
+              <option value="outros">Outros</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Detalhes (opcional)</label>
+            <textarea name="details" class="form-control" rows="3" placeholder="Conte-nos mais detalhes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Voltar</button>
+          <button type="submit" class="btn btn-danger">Solicitar cancelamento</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  .order-actions-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+  }
+
+  .order-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .btn-action {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-2);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-action:hover {
+    border-color: var(--neon);
+    transform: translateY(-2px);
+    background: rgba(255, 105, 180, 0.05);
+  }
+
+  .btn-action.whatsapp:hover {
+    border-color: #25D366;
+  }
+
+  .action-icon {
+    font-size: 1.8rem;
+  }
+
+  .action-info strong {
+    display: block;
+    font-size: 0.9rem;
+  }
+
+  .action-info small {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+  }
+
+  .modal-neon {
+    background: var(--surface);
+    border: 1px solid var(--neon);
+    color: var(--text);
+  }
+
+  .status-pendente {
+    color: #f0ad4e;
+  }
+
+  .status-aprovado {
+    color: #5bc0be;
+  }
+
+  .status-cancelado {
+    color: var(--danger);
+  }
+
+  .status-entregue {
+    color: #5cb85c;
+  }
+</style>

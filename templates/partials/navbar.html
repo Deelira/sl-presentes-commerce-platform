@@ -1,0 +1,95 @@
+<!-- NAVBAR SUPERIOR (primeira linha) -->
+<nav class="navbar-top">
+  <div class="container">
+    <div class="navbar-top-content">
+      <!-- Logo -->
+      <a class="logo" href="{{ url_for('shop.home') }}">
+        {{ STORE_NAME }}
+      </a>
+
+      <!-- Barra de pesquisa central -->
+      <form class="search-form-top" action="{{ url_for('shop.products') }}" method="get" id="searchForm">
+        <div class="search-wrapper-top">
+          <span class="search-icon-top">🔍</span>
+          <input type="search" id="searchInput" name="q" placeholder="Buscar produtos..." aria-label="Buscar"
+            autocomplete="off">
+          <!-- Dropdown de resultados em tempo real -->
+          <div id="searchDropdown" class="search-dropdown" style="display: none;">
+            <div id="searchResults" class="search-results"></div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Ações do usuário -->
+      <div class="user-actions-top">
+        {% if current_user.is_authenticated %}
+        <div class="dropdown">
+          <button class="user-btn" data-bs-toggle="dropdown">
+            👤 {{ current_user.name or current_user.email.split('@')[0] }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('account.index') }}">Minha conta</a></li>
+            {% if current_user.is_admin %}
+            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">Admin</a></li>
+            {% endif %}
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">Sair</a></li>
+          </ul>
+        </div>
+        {% else %}
+        <a class="btn-link" href="{{ url_for('auth.login') }}">Entrar</a>
+        <a class="btn-neon-small" href="{{ url_for('auth.register') }}">Criar conta</a>
+        {% endif %}
+        <!-- Carrinho -->
+        <a class="cart-btn" href="{{ url_for('cart.view') }}">
+          🛒 Carrinho
+          {% if cart_count %}
+          <span class="cart-count">{{ cart_count }}</span>
+          {% endif %}
+        </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- NAVBAR INFERIOR (segunda linha - categorias) -->
+<nav class="navbar-bottom">
+  <div class="container">
+    <ul class="categories-list">
+      <li>
+        <a href="{{ url_for('shop.home') }}" class="{% if request.endpoint == 'shop.home' %}active-category{% endif %}">
+          Início
+        </a>
+      </li>
+      <li>
+        <a href="{{ url_for('shop.products') }}"
+          class="{% if request.endpoint == 'shop.products' and not request.args.get('cat') %}active-category{% endif %}">
+          Produtos
+        </a>
+      </li>
+      {% for c in nav_categories[:6] %}
+      <li>
+        <a href="{{ url_for('shop.category', slug=c.slug) }}"
+          class="{% if (current_cat == c.slug) or (category and category.id == c.id) or (request.args.get('cat') == c.slug) or (request.view_args and request.view_args.get('slug') == c.slug) %}active-category{% endif %}">
+          {{ c.name }}
+        </a>
+      </li>
+      {% endfor %}
+
+      <!-- ESPAÇADOR FLEX -->
+      <li class="flex-spacer"></li>
+
+      <!-- LINK MEUS PEDIDOS -->
+      {% if current_user.is_authenticated %}
+      <li>
+        <a href="{{ url_for('account.index') }}"
+          class="orders-link {% if request.endpoint and request.endpoint.startswith('account.') %}active-category{% endif %}">
+          📋 Pedidos
+        </a>
+      </li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>

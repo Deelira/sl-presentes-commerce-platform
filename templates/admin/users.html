@@ -1,0 +1,36 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<h1 class="mb-3">Usuários</h1>
+<div class="card-neo p-3 table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>Email</th>
+        <th>Tipo</th>
+        <th>Ativo</th>
+        <th>Desde</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in items %}
+      <tr>
+        <td>{{ u.name }}</td>
+        <td>{{ u.email }}</td>
+        <td>{% if u.is_admin %}<span class="badge bg-info">admin</span>{% else %}cliente{% endif %}</td>
+        <td>{% if u.is_active_flag %}<span class="badge bg-success">sim</span>{% else %}<span
+            class="badge bg-secondary">não</span>{% endif %}</td>
+        <td>{{ u.created_at.strftime('%d/%m/%Y') }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.user_toggle', uid=u.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm">Alternar</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ category.name }} — {{ STORE_NAME }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+      <div>
+        <span class="eyebrow">Categoria</span>
+        <h1 class="mt-1 mb-1">{{ category.name }}</h1>
+        <p class="text-muted">
+          {{ pagination.total }} itens encontrados
+        </p>
+      </div>
+
+      <!-- Seletor de ordenação -->
+      <div class="sort-selector">
+        <label for="sort" class="text-muted me-2">Ordenar por:</label>
+        <select id="sort" class="form-select bg-dark text-light border-secondary"
+          style="width: auto; display: inline-block;">
+          <option value="random" {% if sort=='random' %}selected{% endif %}>Aleatório</option>
+          <option value="popular" {% if sort=='popular' %}selected{% endif %}>Mais Vendidos</option>
+          <option value="newest" {% if sort=='newest' %}selected{% endif %}>Novos</option>
+          <option value="price_asc" {% if sort=='price_asc' %}selected{% endif %}>Menor Preço</option>
+          <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>Maior Preço</option>
+          <option value="name_asc" {% if sort=='name_asc' %}selected{% endif %}>Nome (A-Z)</option>
+          <option value="name_desc" {% if sort=='name_desc' %}selected{% endif %}>Nome (Z-A)</option>
+          <option value="stock_desc" {% if sort=='stock_desc' %}selected{% endif %}>Mais Estoque</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row g-3 g-md-4">
+      {% for p in pagination.items %}
+      {% include "partials/product_card.html" %}
+      {% else %}
+      <div class="col-12">
+        <div class="alert alert-info text-center">
+          <i class="fas fa-search fa-2x mb-3 d-block"></i>
+          <h4>Nenhum produto encontrado</h4>
+          <p>Tente navegarando por outra categoria ou visitar a seção de produtos.</p>
+          <a href="{{ url_for('shop.products') }}" class="btn btn-neon">Ver todos os produtos</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% for n in pagination.iter_pages() %}
+        {% if n %}
+        <li class="page-item {% if n == pagination.page %}active{% endif %}">
+          <a class="page-link bg-transparent border-secondary text-light"
+            href="?page={{ n }}&sort={{ sort or 'random' }}">
+            {{ n }}
+          </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link bg-transparent border-secondary">…</span></li>
+        {% endif %}
+        {% endfor %}
+      </ul>
+    </nav>
+    {% endif %}
+
+    <!-- Badge informativo sobre ordenação -->
+    <div class="text-center mt-4">
+      <small class="text-muted">
+        {% if sort == 'popular' %}
+        Produtos ordenados por popularidade (mais vendidos)
+        {% elif sort == 'random' %}
+        Ordem aleatória - Atualize a página para ver produtos diferentes!
+        {% elif sort == 'newest' %}
+        Produtos mais recentes primeiro
+        {% elif 'price' in sort %}
+        Ordenado por preço
+        {% endif %}
+      </small>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Script para aplicar ordenação quando mudar o select
+  document.getElementById('sort')?.addEventListener('change', function () {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', this.value);
+    url.searchParams.set('page', '1'); // Voltar para primeira página
+    window.location.href = url.toString();
+  });
+
+  // Efeito de fade ao carregar os produtos
+  document.addEventListener('DOMContentLoaded', function () {
+    const products = document.querySelectorAll('.col');
+    products.forEach((product, index) => {
+      product.style.animation = `fadeIn 0.5s ease forwards ${index * 0.05}s`;
+      product.style.opacity = '0';
+    });
+  });
+</script>
+{% endblock %}

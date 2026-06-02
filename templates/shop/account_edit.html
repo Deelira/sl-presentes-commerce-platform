@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Editar conta{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="card-neo p-4 mb-4">
+      <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+        <div>
+          <p class="text-uppercase small text-muted mb-2">Resumo da conta</p>
+          <h1 class="h3 mb-2">{{ current_user.name }}</h1>
+          <p class="mb-1">{{ current_user.email }}</p>
+          <p class="mb-0 text-muted">
+            Telefone: {{ current_user.phone or 'Não informado' }} · CPF: {{ current_user.cpf or 'Não informado' }}
+          </p>
+        </div>
+        <div>
+          <a class="btn btn-outline-secondary" href="{{ url_for('account.index') }}">Voltar para minha conta</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <div class="card-neo p-4 h-100">
+          <h2 class="mb-3">Editar informações de contato</h2>
+          <p class="text-muted mb-1">Atualize nome, email, telefone e CPF.</p>
+          <p class="small text-muted mb-4">Nome e email são obrigatórios. Telefone e CPF podem ser preenchidos depois.</p>
+          <form method="post">
+            {{ profile_form.hidden_tag() }}
+            <div class="mb-3">
+              <label class="form-label">Nome</label>
+              {{ profile_form.name(class_='form-control') }}
+              {% if profile_form.name.errors %}
+              <div class="text-danger small mt-1">{{ profile_form.name.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              {{ profile_form.email(class_='form-control') }}
+              {% if profile_form.email.errors %}
+              <div class="text-danger small mt-1">{{ profile_form.email.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Telefone</label>
+              {{ profile_form.phone(class_='form-control') }}
+              {% if profile_form.phone.errors %}
+              <div class="text-danger small mt-1">{{ profile_form.phone.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">CPF</label>
+              {{ profile_form.cpf(class_='form-control') }}
+              {% if profile_form.cpf.errors %}
+              <div class="text-danger small mt-1">{{ profile_form.cpf.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-neon" name="action" value="profile">Salvar contato</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card-neo p-4 h-100">
+          <h2 class="mb-3">Atualizar senha</h2>
+          <p class="text-muted mb-1">Digite sua senha atual e a nova senha para confirmar a troca.</p>
+          <p class="small text-muted mb-4">Use uma nova senha com pelo menos 6 caracteres.</p>
+          <form method="post">
+            {{ password_form.hidden_tag() }}
+            <div class="mb-3">
+              <label class="form-label">Senha atual</label>
+              {{ password_form.current_password(class_='form-control') }}
+              {% if password_form.current_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.current_password.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nova senha</label>
+              {{ password_form.new_password(class_='form-control') }}
+              {% if password_form.new_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.new_password.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirmar nova senha</label>
+              {{ password_form.confirm_password(class_='form-control') }}
+              {% if password_form.confirm_password.errors %}
+              <div class="text-danger small mt-1">{{ password_form.confirm_password.errors|join(', ') }}</div>
+              {% endif %}
+            </div>
+            <button type="submit" class="btn btn-neon" name="action" value="password">Atualizar senha</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

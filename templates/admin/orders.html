@@ -1,0 +1,458 @@
+{% extends "admin/_layout.html" %} {% block content %}
+<h1 class="mb-3">Pedidos</h1>
+
+<!-- Botão de limpeza em massa -->
+<div class="row mb-3">
+  <div class="col">
+    <div class="btn-group">
+      <a href="{{ url_for('admin.orders') }}"
+        class="btn btn-sm {% if not status %}btn-neon{% else %}btn-ghost{% endif %}">Todos</a>
+      {% for s in
+      ['pendente','pago','enviado','entregue','cancelado','recusado'] %}
+      <a href="?status={{ s }}" class="btn btn-sm {% if status==s %}btn-neon{% else %}btn-ghost{% endif %}">{{ s }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- Cards de estatísticas -->
+<div class="row mb-3">
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Total</small>
+      <h4 class="mb-0">{{ stats.total }}</h4>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Pendentes</small>
+      <h4 class="mb-0 text-warning">{{ stats.pendente }}</h4>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Pagos</small>
+      <h4 class="mb-0 text-info">{{ stats.pago }}</h4>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Entregues</small>
+      <h4 class="mb-0 text-success">{{ stats.entregue }}</h4>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Cancelados</small>
+      <h4 class="mb-0 text-danger">{{ stats.cancelado }}</h4>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <div class="card-neo p-2 text-center">
+      <small class="text-muted">Recusados</small>
+      <h4 class="mb-0 text-danger">{{ stats.recusado or 0 }}</h4>
+    </div>
+  </div>
+</div>
+
+<div class="card-neo p-3 table-responsive">
+  <table class="table align-middle">
+    <thead>
+      <tr>
+        <th width="50">
+          <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" />
+        </th>
+        <th>Código</th>
+        <th>Cliente</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in items %}
+      <tr class="order-row" data-order-id="{{ o.id }}" data-order-status="{{ o.status }}">
+        <td>
+          {% if o.status in ['cancelado', 'recusado'] %}
+          <input type="checkbox" class="order-checkbox" value="{{ o.id }}" data-status="{{ o.status }}" />
+          {% endif %}
+        </td>
+        <td><strong>{{ o.code }}</strong></td>
+        <td>
+          {{ o.customer_name or o.user.name }}<br />
+          <small class="text-muted">{{ o.user.email if o.user else o.email or '—' }}</small>
+        </td>
+        <td>{{ o.total|brl }}</td>
+        <td>
+          <span class="badge bg-{{ o.status_class }}">{{ o.status }}</span>
+        </td>
+        <td>{{ o.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+        <td>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.order_detail', oid=o.id) }}">
+            <i class="bi bi-eye"></i> Abrir
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="text-muted text-center">
+          Nenhum pedido encontrado.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Botão de exclusão em massa (aparece apenas quando itens são selecionados) -->
+<div id="bulkActions" style="
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  ">
+  <div class="card-neo p-3 shadow-lg" style="background: var(--bg-2)">
+    <div class="d-flex gap-2 align-items-center">
+      <span id="selectedCount" class="badge bg-danger">0</span>
+      <span>pedidos selecionados</span>
+      <button class="btn btn-danger btn-sm" onclick="bulkDelete()">
+        <i class="bi bi-trash"></i> Excluir selecionados
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="clearSelection()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmação para limpeza em massa -->
+<div class="modal fade" id="cleanModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">🧹 Limpar pedidos cancelados/recusados</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Esta ação irá excluir <strong>permanentemente</strong> todos os
+          pedidos com status:
+        </p>
+        <ul>
+          <li>✅ Cancelado</li>
+          <li>✅ Recusado</li>
+        </ul>
+        <div class="form-group mb-3">
+          <label class="form-label">Excluir pedidos mais antigos que (dias):</label>
+          <input type="number" id="cleanDays" class="form-control" value="30" min="1" />
+          <small class="text-muted">Deixe em branco para excluir todos (não recomendado)</small>
+        </div>
+        <div class="alert alert-danger">
+          <strong>⚠️ Atenção:</strong> Esta operação não pode ser desfeita!
+        </div>
+        <label class="form-label">Digite "LIMPAR" para confirmar:</label>
+        <input type="text" id="cleanConfirm" class="form-control" placeholder="LIMPAR" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmCleanBtn" disabled>
+          <i class="bi bi-brush"></i> Limpar pedidos
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmação para exclusão em massa -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">⚠️ Exclusão em massa</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>
+          Tem certeza que deseja excluir
+          <strong id="bulkCount">0</strong> pedido(s) permanentemente?
+        </p>
+        <p>Serão removidos:</p>
+        <ul>
+          <li>Todos os pedidos selecionados</li>
+          <li>Itens dos pedidos</li>
+          <li>Solicitações relacionadas</li>
+        </ul>
+        <div class="alert alert-warning">
+          <strong>⚠️ Atenção:</strong> Apenas pedidos com status
+          <strong>cancelado</strong> ou <strong>recusado</strong> podem ser
+          excluídos.
+        </div>
+        <label class="form-label">Digite "EXCLUIR" para confirmar:</label>
+        <input type="text" id="bulkConfirm" class="form-control" placeholder="EXCLUIR" />
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmBulkDeleteBtn" disabled>
+          <i class="bi bi-trash"></i> Excluir permanentemente
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Variáveis globais
+  let selectedOrders = [];
+
+  // Função para obter o token CSRF
+  function getCSRFToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta) {
+      console.warn("Meta tag CSRF não encontrada");
+      return '';
+    }
+    return meta.getAttribute('content');
+  }
+
+  // Selecionar/Deselecionar todos
+  function toggleSelectAll() {
+    const selectAll = document.getElementById("selectAll");
+    const checkboxes = document.querySelectorAll(".order-checkbox");
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = selectAll.checked;
+    });
+    updateSelectedOrders();
+  }
+
+  // Atualizar lista de pedidos selecionados
+  function updateSelectedOrders() {
+    const checkboxes = document.querySelectorAll(".order-checkbox:checked");
+    selectedOrders = Array.from(checkboxes).map((cb) => ({
+      id: parseInt(cb.value),
+      status: cb.dataset.status,
+    }));
+    const count = selectedOrders.length;
+    const selectedCountSpan = document.getElementById("selectedCount");
+    const bulkActionsDiv = document.getElementById("bulkActions");
+    if (selectedCountSpan) selectedCountSpan.innerText = count;
+    if (bulkActionsDiv) bulkActionsDiv.style.display = count > 0 ? "block" : "none";
+  }
+
+  // Limpar seleção
+  function clearSelection() {
+    const checkboxes = document.querySelectorAll(".order-checkbox");
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+    const selectAll = document.getElementById("selectAll");
+    if (selectAll) selectAll.checked = false;
+    updateSelectedOrders();
+  }
+
+  // Exclusão em massa - mostrar modal
+  function bulkDelete() {
+    if (selectedOrders.length === 0) {
+      alert("Nenhum pedido selecionado.");
+      return;
+    }
+
+    const validOrders = selectedOrders.filter((o) =>
+      ["cancelado", "recusado"].includes(o.status)
+    );
+
+    if (validOrders.length === 0) {
+      alert('⚠️ Apenas pedidos com status "cancelado" ou "recusado" podem ser excluídos.');
+      return;
+    }
+
+    if (validOrders.length !== selectedOrders.length) {
+      alert(`⚠️ ${selectedOrders.length - validOrders.length} pedido(s) não puderam ser selecionados pois não estão cancelados/recusados.`);
+    }
+
+    selectedOrders = validOrders;
+    const bulkCountSpan = document.getElementById("bulkCount");
+    if (bulkCountSpan) bulkCountSpan.innerText = selectedOrders.length;
+
+    const modalElement = document.getElementById("bulkDeleteModal");
+    if (modalElement) {
+      const modal = new bootstrap.Modal(modalElement);
+      modal.show();
+    }
+  }
+
+  // ============ EVENT LISTENERS ============
+
+  // Habilitar/desabilitar botão de limpeza baseado no input
+  const cleanConfirmInput = document.getElementById("cleanConfirm");
+  if (cleanConfirmInput) {
+    cleanConfirmInput.addEventListener("input", function (e) {
+      const confirmBtn = document.getElementById("confirmCleanBtn");
+      if (confirmBtn) {
+        confirmBtn.disabled = e.target.value !== "LIMPAR";
+      }
+    });
+  }
+
+  // Habilitar/desabilitar botão de exclusão em massa baseado no input
+  const bulkConfirmInput = document.getElementById("bulkConfirm");
+  if (bulkConfirmInput) {
+    bulkConfirmInput.addEventListener("input", function (e) {
+      const confirmBtn = document.getElementById("confirmBulkDeleteBtn");
+      if (confirmBtn) {
+        confirmBtn.disabled = e.target.value !== "EXCLUIR";
+      }
+    });
+  }
+
+  // EXECUTAR EXCLUSÃO EM MASSA
+  const confirmBulkDeleteBtn = document.getElementById("confirmBulkDeleteBtn");
+  if (confirmBulkDeleteBtn) {
+    // Remove event listeners antigos clonando o botão
+    const newBtn = confirmBulkDeleteBtn.cloneNode(true);
+    confirmBulkDeleteBtn.parentNode.replaceChild(newBtn, confirmBulkDeleteBtn);
+
+    newBtn.addEventListener("click", async function () {
+      const orderIds = selectedOrders.map((o) => o.id);
+
+      if (orderIds.length === 0) {
+        alert("Nenhum pedido selecionado.");
+        return;
+      }
+
+      const btn = this;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Processando...';
+
+      try {
+        const response = await fetch("{{ url_for('admin.bulk_delete_orders') }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCSRFToken()
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ order_ids: orderIds }),
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("HTTP Error:", response.status, text.substring(0, 200));
+          alert(`Erro HTTP ${response.status}: ${response.statusText}`);
+          return;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (e) {
+          console.error("Erro ao parsear JSON:", e);
+          alert("Os pedidos foram excluídos! Recarregando a página...");
+          location.reload();
+          return;
+        }
+
+        if (data.success) {
+          alert(data.message);
+          location.reload();
+        } else {
+          alert("Erro: " + data.message);
+        }
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro na requisição: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+  }
+
+  // EXECUTAR LIMPEZA EM MASSA (LIMPAR CANCELADOS)
+  const confirmCleanBtn = document.getElementById("confirmCleanBtn");
+  if (confirmCleanBtn) {
+    // Remove event listeners antigos clonando o botão
+    const newBtn = confirmCleanBtn.cloneNode(true);
+    confirmCleanBtn.parentNode.replaceChild(newBtn, confirmCleanBtn);
+
+    newBtn.addEventListener("click", async function () {
+      const daysInput = document.getElementById("cleanDays");
+      const days = daysInput ? daysInput.value : "30";
+      const daysValue = days ? parseInt(days) : null;
+
+      const btn = this;
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Processando...';
+
+      console.log("Enviando requisição de limpeza...", { days: daysValue });
+
+      try {
+        const response = await fetch("{{ url_for('admin.clean_cancelled_orders') }}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-CSRFToken": getCSRFToken()
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ days: daysValue }),
+        });
+
+        console.log("Resposta status:", response.status);
+
+        if (!response.ok) {
+          const text = await response.text();
+          console.error("HTTP Error:", response.status, text.substring(0, 200));
+          alert(`Erro HTTP ${response.status}: ${response.statusText}`);
+          return;
+        }
+
+        let data;
+        try {
+          data = await response.json();
+          console.log("Resposta data:", data);
+        } catch (e) {
+          console.error("Erro ao parsear JSON:", e);
+          alert("Operação concluída! Recarregando a página...");
+          location.reload();
+          return;
+        }
+
+        if (data.success) {
+          alert(data.message);
+          location.reload();
+        } else {
+          alert("Erro: " + data.message);
+        }
+      } catch (error) {
+        console.error("Erro:", error);
+        alert("Erro na requisição: " + error.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+  }
+
+  // Event listeners para checkboxes
+  document.querySelectorAll(".order-checkbox").forEach((checkbox) => {
+    checkbox.removeEventListener("change", updateSelectedOrders);
+    checkbox.addEventListener("change", updateSelectedOrders);
+  });
+
+  // Atualizar quando a página carregar
+  document.addEventListener("DOMContentLoaded", function () {
+    updateSelectedOrders();
+  });
+</script>
+
+
+{% endblock %}

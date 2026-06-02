@@ -1,0 +1,94 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1 class="mb-0">Produtos</h1>
+  <a class="btn btn-neon" href="{{ url_for('admin.product_new') }}">+ Novo produto</a>
+</div>
+
+<div class="card-neo p-2 p-sm-3">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th style="width: 60px"></th>
+          <th>Nome</th>
+          <th style="min-width: 80px">SKU</th>
+          <th style="min-width: 100px">Preço</th>
+          <th style="min-width: 80px">Qtd</th>
+          <th style="min-width: 70px">Ativo</th>
+          <th style="min-width: 95px" class="text-end">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in items %}
+        <tr>
+          <td style="width: 60px">
+            {% if p.image_url %}
+            <img src="{{ p.image_url }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;"
+              loading="lazy">
+            {% else %}
+            <span style="font-size: 1.5rem;">⚡</span>
+            {% endif %}
+          </td>
+          <td style="word-wrap: break-word; white-space: normal;">
+            <span class="d-block d-sm-none small text-muted mb-1">Produto:</span>
+            {{ p.name|truncate(50, True) }}
+          </td>
+          <td>
+            <span class="d-block d-sm-none small text-muted">SKU:</span>
+            <code class="small">{{ p.sku }}</code>
+          </td>
+          <td>
+            <span class="d-block d-sm-none small text-muted">Preço:</span>
+            <strong>{{ p.price|brl }}</strong>
+            <br>
+            <small class="text-muted">custo {{ p.supplier_price|brl }}</small>
+          </td>
+          <td>
+            <span class="d-block d-sm-none small text-muted">Estoque:</span>
+            {{ p.stock }}
+          </td>
+          <td>
+            <span class="d-block d-sm-none small text-muted">Status:</span>
+            {% if p.is_active %}
+            <span class="badge bg-success">sim</span>
+            {% else %}
+            <span class="badge bg-secondary">não</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <div class="d-flex flex-column flex-sm-row gap-1 justify-content-end">
+              <a class="btn btn-ghost btn-sm" href="{{ url_for('admin.product_edit', pid=p.id) }}">
+                ✏️ Editar
+              </a>
+              <form method="post" action="{{ url_for('admin.product_delete', pid=p.id) }}" class="d-inline"
+                onsubmit="return confirm('Excluir produto \" {{ p.name }}\"? Esta ação não pode ser desfeita.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-outline-danger">
+                  🗑️ Excluir
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="text-muted text-center py-4">
+            Nenhum produto cadastrado.
+            <a href="{{ url_for('admin.product_new') }}">Criar primeiro produto</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Versão mobile alternativa (opcional) - ative se preferir cards -->
+{% if items and items|length > 0 %}
+<div class="d-block d-sm-none mt-3 text-center small text-muted">
+  <i>💡 Deslize a tabela para o lado para ver mais informações</i>
+</div>
+{% endif %}
+
+{% endblock %}

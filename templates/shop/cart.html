@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Carrinho — {{ STORE_NAME }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="mb-4">Seu carrinho</h1>
+    {% if items %}
+
+    <!-- Lista de produtos responsiva com borda estilo card-neo -->
+    <div class="card-neo p-3 p-sm-4">
+      {% for item in items %}
+      <div class="cart-row flex-column flex-sm-row {% if not loop.last %}border-bottom pb-3 mb-3{% endif %}"
+        data-product-id="{{ item.id }}">
+        <!-- Imagem -->
+        <div class="d-flex justify-content-center mb-3 mb-sm-0">
+          {% if item.image %}
+          <img src="{{ item.image }}" alt="{{ item.name }}" class="img-fluid"
+            style="width:80px;height:80px;object-fit:cover;border-radius:8px">
+          {% else %}
+          <div class="placeholder-img d-flex align-items-center justify-content-center"
+            style="width:80px;height:80px;border-radius:8px;background:#f0f0f0">
+            ⚡
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Nome e preço -->
+        <div class="flex-grow-1 text-center text-sm-start mb-3 mb-sm-0">
+          <div class="fw-semibold">{{ item.name }}</div>
+          <div class="text-muted small">{{ item.price|brl }} cada</div>
+          <!-- Mostra estoque disponível -->
+          <div class="small mt-1">
+            📦 Estoque: <strong>{{ item.max_stock }}</strong> unidade(s)
+          </div>
+        </div>
+
+        <!-- Quantidade -->
+        <form action="{{ url_for('cart.update', product_id=item.id) }}" method="post"
+          class="d-flex align-items-center justify-content-center justify-content-sm-start gap-2 mb-3 mb-sm-0">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="number" name="qty" value="{{ item.qty }}" min="1" max="{{ item.max_stock }}"
+            class="form-control text-center qty-input" style="width:80px">
+          <button class="btn btn-ghost btn-sm">Atualizar</button>
+        </form>
+
+        <!-- Subtotal e remover -->
+        <div class="text-center text-sm-end">
+          <div class="fw-bold">{{ (item.price * item.qty)|brl }}</div>
+          <form action="{{ url_for('cart.remove', product_id=item.id) }}" method="post" class="mt-1">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm btn-link text-danger p-0">Remover</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Card de resumo responsivo -->
+    <div class="card-neo mt-5 p-3 p-sm-4">
+      <div class="row justify-content-center">
+        <div class="col-12">
+          <h6 class="text-muted mb-3 text-center">📦 Resumo do pedido</h6>
+          <div class="space-y-2" style="max-width: 400px; margin: 0 auto;">
+            <div class="d-flex justify-content-between gap-2 gap-sm-4 mb-2">
+              <span class="text-muted">Subtotal ({{ items|sum(attribute='qty') }} itens):</span>
+              <span class="fw-semibold">{{ total|brl }}</span>
+            </div>
+            <div class="d-flex justify-content-between gap-2 gap-sm-4 mb-2">
+              <span class="text-muted">Frete:</span>
+              <span class="fw-semibold" style="color: #ff69b4;">Grátis</span>
+            </div>
+            <div class="d-flex justify-content-between gap-2 gap-sm-4 pt-2 border-top">
+              <span class="fw-bold">Total:</span>
+              <span class="fw-bold h5 mb-0 grad">{{ total|brl }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botões -->
+    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4">
+      <a href="{{ url_for('shop.products') }}" class="btn btn-outline-secondary">
+        ← Continuar comprando
+      </a>
+      <a href="{{ url_for('checkout.index') }}" class="btn btn-neon">
+        Finalizar compra →
+      </a>
+    </div>
+
+    {% else %}
+    <div class="card-neo p-4 p-sm-5 text-center">
+      <p class="lead text-muted">Seu carrinho está vazio.</p>
+      <a class="btn btn-neon" href="{{ url_for('shop.products') }}">Explorar produtos</a>
+    </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<script>
+  // Validação em tempo real nos campos de quantidade
+  document.querySelectorAll('.qty-input').forEach(input => {
+    input.addEventListener('change', function () {
+      const maxStock = parseInt(this.getAttribute('max'));
+      let val = parseInt(this.value);
+
+      if (val > maxStock) {
+        alert(`⚠️ Estoque máximo: ${maxStock} unidades`);
+        this.value = maxStock;
+      }
+      if (val < 1) {
+        this.value = 1;
+      }
+      this.form.submit();
+    });
+  });
+</script>
+
+<style>
+  @media (min-width: 768px) {
+    .cart-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 1.5rem;
+      align-items: center;
+    }
+  }
+</style>
+{% endblock %}

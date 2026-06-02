@@ -1,0 +1,50 @@
+<div class="col-6 col-md-4 col-lg-3">
+  <a href="{{ url_for('shop.product_detail', slug=p.slug) }}"
+    class="card-neo d-block {% if p.stock <= 0 %}out-of-stock{% endif %}">
+    <div class="img-wrap" style="position: relative;">
+      {% if p.image_url %}
+      <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+      {% else %}
+      <div class="placeholder-img">⚡</div>
+      {% endif %}
+
+      <!-- 🔥 BADGE DE ESGOTADO (adicionado) -->
+      {% if p.stock <= 0 %} <div class="soldout-badge">ESGOTADO
+    </div>
+    {% endif %}
+
+    <!-- Badge de Mais Vendido -->
+    {% if sort == 'popular' and loop_position is defined and loop_position <= 3 %} <div class="popular-badge">
+      {% if loop_position == 1 %}
+      🥇 Mais Vendido
+      {% elif loop_position == 2 %}
+      🥈 2º Mais Vendido
+      {% elif loop_position == 3 %}
+      🥉 3º Mais Vendido
+      {% endif %}
+</div>
+{% endif %}
+</div>
+
+<div class="body">
+  <div class="title">{{ p.name }}</div>
+
+  <!-- 🔥 INDICADOR DE ESTOQUE (adicionado) -->
+  {% if p.stock > 0 %}
+  <div class="in-stock mt-1 mb-1">
+    ✅ Em estoque
+  </div>
+  {% else %}
+  <div class="out-of-stock-text mt-1 mb-1">
+    ❌ Indisponível
+  </div>
+  {% endif %}
+
+  <div class="price-btn-wrapper">
+    <div class="price">{{ p.price|brl }}</div>
+    <span class="btn {% if p.stock <= 0 %}btn-outline-danger{% else %}btn-outline-neon{% endif %} btn-sm">
+      {% if p.stock <= 0 %}Esgotado{% else %}Ver{% endif %} </span>
+  </div>
+</div>
+</a>
+</div>

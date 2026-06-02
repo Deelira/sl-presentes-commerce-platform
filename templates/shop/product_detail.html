@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — {{ STORE_NAME }}{% endblock %}
+{% block meta_description %}{{ product.description[:150] if product.description else product.name }}{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="row g-4 align-items-start">
+      <!-- COLUNA DA IMAGEM - SEM ESPAÇOS INTERNOS -->
+      <div class="col-md-5 col-lg-4">
+        <div class="card-neo" style="max-width: 450px; margin: 0 auto; overflow: hidden; padding: 0;">
+          <div class="img-wrap" style="aspect-ratio: 1/1; position: relative; width: 100%;">
+            {% if product.image_url %}
+            <img src="{{ product.image_url }}" alt="{{ product.name }}"
+              style="width: 100%; height: 100%; object-fit: cover; display: block;">
+            {% else %}
+            <div class="placeholder-img"
+              style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0f0f0;">
+              ⚡</div>
+            {% endif %}
+
+            <!-- BADGE DE ESGOTADO -->
+            {% if product.stock <= 0 %} <div class="soldout-badge">ESGOTADO
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA DAS INFORMAÇÕES -->
+    <div class="col-md-7 col-lg-8">
+      {% if product.category %}<span class="eyebrow">{{ product.category.name }}</span>{% endif %}
+      <h1 class="mt-2" style="font-size: 1.8rem;">{{ product.name }}</h1>
+      <div class="display-6 grad fw-bold my-3">{{ product.price|brl }}</div>
+
+      <!-- OPÇÕES DE PARCELAMENTO -->
+      <div class="mb-3" style="color: #00a650; font-size: 0.9rem;">
+        em até 3x de {{ (product.price / 3)|brl }} sem juros
+      </div>
+
+      <p class="text-muted" style="line-height: 1.6;">{{ product.description }}</p>
+
+      <!-- STATUS DO ESTOQUE -->
+      <div class="stock-status mb-3">
+        {% if product.stock > 0 %}
+        <span class="badge-stock">
+          ✅ Em estoque - {{ product.stock }} unidade{% if product.stock != 1 %}s{% endif %} disponível{% if
+          product.stock != 1 %}is{% endif %}
+        </span>
+        {% else %}
+        <span class="badge-soldout">❌ Indisponível</span>
+        {% endif %}
+      </div>
+
+      <!-- FORMULÁRIO DO CARRINHO -->
+      {% if product.stock > 0 %}
+      <form action="{{ url_for('cart.add', product_id=product.id) }}" method="post" class="mt-3" id="add-to-cart-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="d-flex align-items-center flex-wrap gap-3">
+          <div class="qty-stepper d-inline-flex align-items-center gap-2">
+            <button type="button" class="btn btn-ghost" data-qty-minus>−</button>
+            <input type="number" min="1" max="{{ product.stock }}" value="1" name="qty" data-qty
+              class="form-control text-center" style="width:80px">
+            <button type="button" class="btn btn-ghost" data-qty-plus>+</button>
+          </div>
+          <button type="submit" class="btn btn-neon btn-lg">
+            🛒 Adicionar ao carrinho
+          </button>
+        </div>
+      </form>
+      {% else %}
+      <p class="text-muted mt-2 small">
+        Este produto está temporariamente indisponível. Volte em breve!
+      </p>
+      {% endif %}
+
+      <div class="mt-4 pt-3 border-top">
+        <div class="small text-muted">
+          <strong>SKU:</strong> {{ product.sku }}<br>
+          {% if product.supplier %}<strong>Envio:</strong> em ~{{ product.supplier.avg_shipping_days }} dias úteis<br>{%
+          endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if related %}
+  <hr class="my-5">
+  <h3 class="mb-3">Você também pode gostar</h3>
+  <div class="row g-3">
+    {% for p in related %}
+    {% include "partials/product_card.html" %}
+    {% endfor %}
+  </div>
+  {% endif %}
+  </div>
+</section>
+
+
+{% endblock %}

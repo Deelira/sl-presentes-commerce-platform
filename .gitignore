@@ -1,0 +1,36 @@
+__pycache__/
+*.pyc
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+CHANGES_SUMMARY.md
+CSS_MOBILE_IMPROVEMENTS.md
+MERCADO_PAGO_CHANGES.md
+MERCADO_PAGO_SETUP.md
+STOCK_RESTORATION_LOGIC.md
+
+
+tests/
+instance/
+

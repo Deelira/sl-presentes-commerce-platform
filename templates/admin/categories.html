@@ -1,0 +1,74 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<h1 class="mb-4">Categorias</h1>
+
+<div class="row g-3">
+  <!-- Formulário - Mobile primeiro (em cima) -->
+  <div class="col-12 col-md-4 order-1 order-md-0">
+    <div class="card-neo p-3">
+      <h5 class="mb-3">+ Nova categoria</h5>
+      <form method="post">
+        {{ form.hidden_tag() }}
+        <label class="form-label">Nome da categoria</label>
+        {{ form.name(class_='form-control mb-3', placeholder='Ex: Camisetas') }}
+        <button class="btn btn-neon w-100">Criar categoria</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Lista de categorias -->
+  <div class="col-12 col-md-8 order-0 order-md-1">
+    <div class="card-neo p-2 p-sm-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">📋 Lista de categorias</h5>
+        <span class="badge bg-info">{{ items|length }} categorias</span>
+      </div>
+
+ {% if items %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th class="d-none d-md-table-cell">Slug</th>
+              <th class="text-end" style="width: 80px">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in items %}
+            <tr>
+              <td>
+                <strong>{{ c.name }}</strong>
+                <div class="d-block d-md-none small text-muted mt-1">
+                  <code>{{ c.slug }}</code>
+                </div>
+               </td>
+              <td class="d-none d-md-table-cell">
+                <code class="small">{{ c.slug }}</code>
+               </td>
+              <td class="text-end">
+                <form method="post" action="{{ url_for('admin.category_delete', cid=c.id) }}"
+                  onsubmit="return confirm('Excluir categoria \"{{ c.name }}\"? Esta ação não pode ser desfeita.')"
+                  class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-danger" title="Excluir categoria">
+                    🗑️ <span class="d-none d-sm-inline">Excluir</span>
+                  </button>
+                </form>
+               </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-4">
+        <span style="font-size: 3rem;">📁</span>
+        <p class="text-muted mt-2 mb-0">Nenhuma categoria cadastrada.</p>
+        <small class="text-muted">Crie sua primeira categoria ao lado</small>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

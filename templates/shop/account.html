@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Minha conta{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1>Olá, {{ current_user.name }}</h1>
+    <p class="text-muted">{{ current_user.email }}</p>
+    <div class="mb-4">
+      <a class="btn btn-neon" href="{{ url_for('account.edit_profile') }}">Editar informações de contato</a>
+    </div>
+    <h3 class="mt-4 mb-3">Meus pedidos</h3>
+    {% if orders %}
+    <div class="table-responsive card-neo p-3">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Data</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for o in orders %}
+          <tr>
+            <td><strong>{{ o.code }}</strong></td>
+            <td>{{ o.created_at.strftime('%d/%m/%Y') }}</td>
+            <td>{{ o.total|brl }}</td>
+            <td><span class="badge bg-{{ o.status_class }}">{{ o.status }}</span></td>
+            <td><a class="btn btn-ghost btn-sm" href="{{ url_for('account.order_detail', code=o.code) }}">Ver</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<p class="text-muted">Você ainda não tem pedidos.</p>{% endif %}
+  </div>
+</section>
+{% endblock %}

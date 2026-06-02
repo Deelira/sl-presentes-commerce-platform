@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Checkout — {{ STORE_NAME }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="mb-4">Finalizar compra</h1>
+    <form method="post" class="row g-4">
+      {{ form.hidden_tag() }}
+      <div class="col-lg-7">
+        <div class="card-neo p-4">
+          <h5 class="mb-3">Dados de entrega</h5>
+          <div class="row g-3">
+            <div class="col-md-12"><label class="form-label">Nome completo</label>{{
+              form.customer_name(class_='form-control') }}</div>
+            <div class="col-md-6"><label class="form-label">Telefone</label>{{ form.phone(class_='form-control') }}
+            </div>
+            <div class="col-md-6"><label class="form-label">CPF</label>{{ form.cpf(class_='form-control', id='cpf',
+              placeholder='000.000.000-00') }}</div>
+            <div class="col-md-6"><label class="form-label">CEP</label>{{ form.cep(class_='form-control', id='cep',
+              placeholder='00000-000') }}</div>
+            <div class="col-md-12"><label class="form-label">Endereço</label>{{ form.address(class_='form-control',
+              id='address') }}</div>
+            <div class="col-md-8"><label class="form-label">Complemento</label>{{ form.complement(class_='form-control',
+              id='complement', placeholder='Apto, casa, bloco, etc.') }}</div>
+            <div class="col-md-4"><label class="form-label">Número</label>{{ form.number(class_='form-control',
+              id='number', placeholder='Nº') }}</div>
+            <div class="col-md-8"><label class="form-label">Cidade</label>{{ form.city(class_='form-control', id='city')
+              }}</div>
+            <div class="col-md-4"><label class="form-label">Estado</label>{{ form.state(class_='form-control',
+              id='state') }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card-neo p-4">
+          <h5 class="mb-3">Resumo</h5>
+          {% for i in items %}
+          <div class="d-flex justify-content-between small mb-2"><span>{{ i.qty }}× {{ i.name }}</span><span>{{
+              (i.price*i.qty)|brl }}</span></div>
+          {% endfor %}
+          <hr>
+          <div class="d-flex justify-content-between"><span class="text-muted">Total</span><strong
+              class="grad h4 mb-0">{{ total|brl }}</strong></div>
+          <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4"><button
+              class="btn btn-neon">Confirmar pedido</button></div>
+        </div>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

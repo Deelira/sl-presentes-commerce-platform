@@ -1,0 +1,201 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<a class="text-muted small" href="{{ url_for('admin.orders') }}">← Pedidos</a>
+<h1 class="mt-2">Pedido {{ order.code }} <span class="badge bg-{{ order.status_class }}">{{ order.status }}</span></h1>
+
+{% if order.status in ['cancelado', 'recusado'] %}
+<div class="alert alert-warning mt-2">
+  <i class="bi bi-exclamation-triangle"></i>
+  Este pedido está <strong>{{ order.status }}</strong>. Você pode excluí-lo permanentemente do sistema.
+</div>
+{% endif %}
+
+<div class="row g-3 mt-2">
+  <div class="col-12">
+    <div class="card-neo p-3">
+      <h5>Itens do Pedido</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>SKU</th>
+              <th>Qtd</th>
+              <th>Preço</th>
+              <th>Custo</th>
+              <th>Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for it in order.items %}
+            <tr>
+              <td>{{ it.product_name }}</td>
+              <td><code>{{ it.sku }}</code></td>
+              <td>{{ it.quantity }}</td>
+              <td>{{ it.unit_price|brl }}</td>
+              <td class="text-muted">{{ it.supplier_price|brl }}</td>
+              <td>{{ it.subtotal|brl }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-end h5">Total: <span class="grad">{{ order.total|brl }}</span></div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card-neo p-3">
+      <h5>Informações Completas do Pedido</h5>
+
+      <div class="row g-3 mt-2">
+        <!-- Coluna 1: Dados Pessoais -->
+        <div class="col-md-6 col-lg-4">
+          <div class="border rounded p-3 h-100">
+            <h6 class="mb-3"><i class="bi bi-person-circle"></i> Dados Pessoais</h6>
+            <div class="mb-2">
+              <small class="text-muted d-block">Nome completo</small>
+              <strong>{{ order.customer_name }}</strong>
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">Email</small>
+              {{ order.customer_email or 'Não informado' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">Telefone</small>
+              {{ order.phone or 'Não informado' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">WhatsApp</small>
+              {{ order.whatsapp or order.phone or 'Não informado' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">CPF/CNPJ</small>
+              {{ order.document or 'Não informado' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna 2: Endereço de Entrega -->
+        <div class="col-md-6 col-lg-4">
+          <div class="border rounded p-3 h-100">
+            <h6 class="mb-3"><i class="bi bi-geo-alt"></i> Endereço de Entrega</h6>
+            <div class="mb-2">
+              <small class="text-muted d-block">Endereço</small>
+              {{ order.address }}, {{ order.number or 'S/N' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">Complemento</small>
+              {{ order.complement or '—' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">Bairro</small>
+              {{ order.neighborhood or 'Não informado' }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">Cidade / UF</small>
+              {{ order.city }} / {{ order.state }}
+            </div>
+            <div class="mb-2">
+              <small class="text-muted d-block">CEP</small>
+              {{ order.cep }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna 3: Entrega e Pagamento -->
+        <div class="col-md-6 col-lg-4">
+          <div class="border rounded p-3 h-100">
+            <h6 class="mb-3"><i class="bi bi-credit-card"></i> Entrega e Pagamento</h6>
+            {% if order.shipping_method %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Método de entrega</small>
+              {{ order.shipping_method }}
+            </div>
+            {% endif %}
+            {% if order.shipping_cost %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Frete</small>
+              {{ order.shipping_cost|brl }}
+            </div>
+            {% endif %}
+            {% if order.payment_method %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Forma de pagamento</small>
+              {{ order.payment_method }}
+            </div>
+            {% endif %}
+            {% if order.payment_condition %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Condição de pagamento</small>
+              {{ order.payment_condition }}
+            </div>
+            {% endif %}
+            {% if order.change_for %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Troco para</small>
+              {{ order.change_for|brl }}
+            </div>
+            {% endif %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Status atual</small>
+              <span class="badge bg-{{ order.status_class }}">{{ order.status }}</span>
+            </div>
+            {% if order.tracking_code %}
+            <div class="mb-2">
+              <small class="text-muted d-block">Código de rastreio</small>
+              <code>{{ order.tracking_code }}</code>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Linha completa para Observações -->
+        {% if order.observations or order.internal_notes or order.payment_note %}
+        <div class="col-12">
+          <div class="border rounded p-3">
+            <h6 class="mb-3"><i class="bi bi-chat-dots"></i> Observações</h6>
+            <div class="row">
+              {% if order.observations %}
+              <div class="col-md-4">
+                <small class="text-muted d-block">Observações do cliente</small>
+                <p class="mb-0">{{ order.observations }}</p>
+              </div>
+              {% endif %}
+              {% if order.internal_notes %}
+              <div class="col-md-4">
+                <small class="text-muted d-block">Notas internas</small>
+                <p class="mb-0 text-muted">{{ order.internal_notes }}</p>
+              </div>
+              {% endif %}
+              {% if order.payment_note %}
+              <div class="col-md-4">
+                <small class="text-muted d-block">Observações de pagamento</small>
+                <p class="mb-0">{{ order.payment_note }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-12">
+    <div class="card-neo p-3">
+      <h5>Atualizar pedido</h5>
+      <form method="post" id="updateForm">
+        {{ form.hidden_tag() }}
+        <label class="form-label">Status</label>
+        {{ form.status(class_='form-select mb-2') }}
+        <label class="form-label">Código de rastreio</label>
+        {{ form.tracking_code(class_='form-control mb-2') }}
+        <label class="form-label">Obs. pagamento</label>
+        {{ form.payment_note(class_='form-control mb-3', rows=3) }}
+        <button class="btn btn-neon w-100" type="submit">Salvar alterações</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

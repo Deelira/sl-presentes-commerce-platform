@@ -1,0 +1,125 @@
+{% extends "admin/_layout.html" %}
+{% block content %}
+<h1 class="mb-4">Dashboard</h1>
+
+<!-- Cards de estatísticas -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="label">Vendas</div>
+      <div class="value accent">{{ total_sales|brl }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="label">Lucro estimado</div>
+      <div class="value">{{ profit|brl }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="label">Pedidos</div>
+      <div class="value">{{ total_orders }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card">
+      <div class="label">Produtos</div>
+      <div class="value">{{ total_products }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- Gráfico de vendas (opcional - pode adicionar depois) -->
+<div class="row g-3">
+
+  <!-- Mais vendidos -->
+  <div class="col-12 col-lg-5">
+    <div class="card-neo p-3">
+      <h5 class="mb-3">🏆 Produtos mais vendidos</h5>
+      {% if top_products %}
+      <div class="top-products-list">
+        {% for p, sold in top_products %}
+        <div class="d-flex justify-content-between align-items-center border-bottom border-secondary py-2">
+          <div class="d-flex align-items-center gap-2 flex-grow-1">
+            <span class="text-muted small" style="min-width: 30px;">#{{ loop.index }}</span>
+            <span class="product-name" style="word-break: break-word; flex: 1;">{{ p.name }}</span>
+          </div>
+          <span class="badge bg-info ms-2">{{ sold }} vendas</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-muted small mb-0 text-center py-3">
+        Nenhum produto vendido ainda.
+      </p>
+      {% endif %}
+
+      {% if top_products and top_products|length >= 5 %}
+      <div class="text-center mt-3">
+        <a href="{{ url_for('admin.products') }}" class="btn btn-ghost btn-sm">
+          Ver todos os produtos →
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pedidos recentes -->
+  <div class="col-12 col-lg-7">
+    <div class="card-neo p-3">
+      <h5 class="mb-3">📦 Pedidos recentes</h5>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Cliente</th>
+              <th class="text-end">Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in recent_orders %}
+            <tr>
+              <td>
+                <a href="{{ url_for('admin.order_detail', oid=o.id) }}" class="text-neon">
+                  {{ o.code }}
+                </a>
+              </td>
+              <td>
+                <span class="d-block d-md-none small text-muted">Cliente:</span>
+                {{ o.customer_name or o.user.name }}
+              </td>
+              <td class="text-end">
+                <span class="d-block d-md-none small text-muted">Total:</span>
+                <strong>{{ o.total|brl }}</strong>
+              </td>
+              <td>
+                <span class="badge bg-{{ o.status_class }}">
+                  {{ o.status }}
+                </span>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" class="text-muted text-center py-4">
+                Nenhum pedido realizado ainda.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if recent_orders and recent_orders|length >= 8 %}
+      <div class="text-center mt-3">
+        <a href="{{ url_for('admin.orders') }}" class="btn btn-ghost btn-sm">
+          Ver todos os pedidos →
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
