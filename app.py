@@ -3,12 +3,13 @@
 import logging
 import os
 from datetime import datetime
+from pathlib import Path
 
+from extensions import csrf 
 from flask import Flask, jsonify, render_template
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import text
 
 from config import Config, is_placeholder
@@ -19,7 +20,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 login_manager = LoginManager()
-csrf = CSRFProtect()
 
 mail = Mail()
 
@@ -72,6 +72,14 @@ def create_app(config_class=Config):
     app = Flask(__name__, instance_relative_config=False)
     app.config.from_object(config_class)
     app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
+
+    from pathlib import Path
+    instance_path = Path(app.instance_path)
+    instance_path.mkdir(parents=True, exist_ok=True)
+
+    if not app.config.get('SQLALCHEMY_DATABASE_URI'):
+        db_path = instance_path / "sl-presentes.db"
+        app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
 
     db.init_app(app)
     csrf.init_app(app)
