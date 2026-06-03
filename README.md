@@ -44,12 +44,12 @@ Sistema completo em **Flask + SQLAlchemy + PostgreSQL/SQLite**, com loja virtual
 
 ### 1. Clone o repositório
 
-bash
-git clone https://github.com/Deelira/sl-presentes-commerce-platform.git
+bash  
+git clone https://github.com/Deelira/sl-presentes-commerce-platform.git  
 cd sl-presentes-commerce-platform  
 
 ### 2. Crie o ambiente virtual
-python -m venv venv
+python -m venv venv  
 source venv/bin/activate          # Linux/Mac  
 # venv\Scripts\activate           # Windows  
 
