@@ -26,17 +26,46 @@ mail = Mail()
 migrate = Migrate()
 
 
-def _get_admin_credentials():
-    email = os.environ.get("INIT_ADMIN_EMAIL")
-    password = os.environ.get("INIT_ADMIN_PASSWORD")
-
-    if not email or not password or is_placeholder(email) or is_placeholder(password):
-        logger.warning(
-            "Admin inicial não criado. Defina INIT_ADMIN_EMAIL e INIT_ADMIN_PASSWORD no .env."
-        )
-        return None
-
-    return email, password
+def _create_default_users():
+    """Cria usuários padrão para teste se não existirem"""
+    
+    # Usuário Administrador
+    admin_email = os.environ.get("INIT_ADMIN_EMAIL", "admin@exemplo.com")
+    admin_password = os.environ.get("INIT_ADMIN_PASSWORD", "admin123")
+    
+    if not is_placeholder(admin_email) and not is_placeholder(admin_password):
+        admin_exists = User.query.filter_by(email=admin_email).first()
+        if not admin_exists:
+            admin = User(
+                name="Administrador", 
+                email=admin_email, 
+                role="admin"
+            )
+            admin.set_password(admin_password)
+            db.session.add(admin)
+            logger.info(f"Administrador criado: {admin_email}")
+    else:
+        logger.warning("Admin não criado: credenciais inválidas ou não configuradas")
+    
+    # Usuário Comum (para testes)
+    user_email = os.environ.get("TEST_USER_EMAIL", "cliente@exemplo.com")
+    user_password = os.environ.get("TEST_USER_PASSWORD", "cliente123")
+    
+    if not is_placeholder(user_email) and not is_placeholder(user_password):
+        user_exists = User.query.filter_by(email=user_email).first()
+        if not user_exists:
+            user = User(
+                name="Cliente Teste", 
+                email=user_email, 
+                role="user"
+            )
+            user.set_password(user_password)
+            db.session.add(user)
+            logger.info(f"Usuário comum criado: {user_email}")
+    else:
+        logger.warning("Usuário comum não criado: credenciais inválidas ou não configuradas")
+    
+    db.session.commit()
 
 
 def create_app(config_class=Config):
@@ -80,6 +109,7 @@ def create_app(config_class=Config):
         cart_count = sum(item["qty"] for item in cart.values()) if cart else 0
 
         try:
+            from models.category import Category
             categories = Category.query.order_by(Category.name).all()
         except:
             categories = []
@@ -102,11 +132,19 @@ def create_app(config_class=Config):
             database_status = "error"
             status_code = 503
 
+        # Verificar se admin foi criado
+        admin_exists = False
+        try:
+            from models.user import User
+            admin_exists = User.query.filter_by(role="admin").first() is not None
+        except:
+            pass
+
         payload = {
             "status": "ok" if database_status == "ok" else "error",
             "app_env": app.config.get("APP_ENV", "unknown"),
             "database": database_status,
-            "admin_configured": admin_credentials is not None,
+            "admin_configured": admin_exists,
         }
 
         return jsonify(payload), status_code
@@ -127,7 +165,6 @@ def create_app(config_class=Config):
         if value is None:
             return "R$ 0,00"
         try:
-            # Formatar com 2 casas decimais
             return (
                 f"R$ {float(value):,.2f}".replace(",", "X")
                 .replace(".", ",")
@@ -162,29 +199,15 @@ def create_app(config_class=Config):
         else:
             return "Agora mesmo"
 
-    from models.category import Category
-    from models.product import Product
-    from models.user import User
-
-    admin_credentials = _get_admin_credentials()
-
+    # Criar usuários padrão dentro do contexto da aplicação
     with app.app_context():
         db.create_all()
-
-        if admin_credentials:
-            admin_email, admin_password = admin_credentials
-            admin_exists = User.query.filter_by(email=admin_email).first()
-
-            if not admin_exists:
-                admin = User(name="Administrador", email=admin_email, role="admin")
-                admin.set_password(admin_password)
-                db.session.add(admin)
-                db.session.commit()
-                logger.info("Administrador inicial criado com sucesso.")
+        _create_default_users()  # ← AQUI: chamando a função correta
 
     return app
 
 
+# Cria a aplicação para o gunicorn
 application = create_app()
 
 if __name__ == "__main__":
