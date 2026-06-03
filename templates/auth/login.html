@@ -30,41 +30,46 @@
         <a href="{{ url_for('auth.register') }}">Criar conta</a>
       </div>
 
-      <!-- Contas de Demonstração -->
-      <div class="alert alert-info mt-4 mb-0" style="background-color: #e7f3ff; border-color: #b8daff;">
-        <div class="d-flex align-items-center mb-2">
-          <span style="font-size: 1.2rem;">🎮</span>
-          <strong class="ms-2">Contas para Teste</strong>
+      <!-- Contas de Demonstração com estilos do sistema -->
+      <div class="card-neo mt-4" style="background: var(--bg-2); border-color: var(--border);">
+        <div class="p-3">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <span style="font-size: 1.2rem;">🎮</span>
+            <strong style="color: var(--text);">Contas para Teste</strong>
+          </div>
+          
+          <hr style="border-color: var(--border); margin: 0.5rem 0 1rem 0;">
+          
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong style="color: var(--danger);">👑 Administrador</strong>
+              <button type="button" class="btn btn-sm btn-outline-neon" onclick="fillCredentials('admin')">
+                Preencher
+              </button>
+            </div>
+            <div style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">
+              Email: admin@exemplo.com<br>
+              Senha: admin123
+            </div>
+          </div>
+          
+          <div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong style="color: var(--text-secondary);">👤 Cliente</strong>
+              <button type="button" class="btn btn-sm btn-outline-neon" onclick="fillCredentials('user')">
+                Preencher
+              </button>
+            </div>
+            <div style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">
+              Email: cliente@exemplo.com<br>
+              Senha: cliente123
+            </div>
+          </div>
+          
+          <small class="text-muted mt-3 d-block" style="font-size: 0.7rem;">
+            ✨ Clique em "Preencher" e depois em "Entrar"
+          </small>
         </div>
-        <hr class="my-2">
-        
-        <div class="mb-3">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <strong style="color: #dc3545;">👑 Administrador</strong>
-            <button type="button" class="btn btn-sm btn-outline-danger" onclick="fillCredentials('admin')">
-              Preencher
-            </button>
-          </div>
-          <div style="font-family: monospace; font-size: 0.85rem;">
-            Email: admin@exemplo.com<br>
-            Senha: admin123
-          </div>
-        </div>
-        
-        <div>
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <strong style="color: #6c757d;">👤 Cliente</strong>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillCredentials('user')">
-              Preencher
-            </button>
-          </div>
-          <div style="font-family: monospace; font-size: 0.85rem;">
-            Email: cliente@exemplo.com<br>
-            Senha: cliente123
-          </div>
-        </div>
-        
-        <small class="text-muted mt-2 d-block">✨ Clique em "Preencher" e depois em "Entrar"</small>
       </div>
     </div>
   </div>
@@ -79,13 +84,17 @@ function fillCredentials(role) {
     document.getElementById('email').value = 'cliente@exemplo.com';
     document.getElementById('password').value = 'cliente123';
   }
-  // Opcional: destaca os campos preenchidos
-  document.getElementById('email').style.borderColor = '#28a745';
-  document.getElementById('password').style.borderColor = '#28a745';
+  // Destaca os campos preenchidos com a cor neon
+  document.getElementById('email').style.borderColor = 'var(--neon)';
+  document.getElementById('password').style.borderColor = 'var(--neon)';
+  document.getElementById('email').style.boxShadow = 'var(--shadow-neon)';
+  document.getElementById('password').style.boxShadow = 'var(--shadow-neon)';
   setTimeout(() => {
     document.getElementById('email').style.borderColor = '';
     document.getElementById('password').style.borderColor = '';
-  }, 20000);
+    document.getElementById('email').style.boxShadow = '';
+    document.getElementById('password').style.boxShadow = '';
+  }, 2000);
 }
 </script>
 {% endblock %}
