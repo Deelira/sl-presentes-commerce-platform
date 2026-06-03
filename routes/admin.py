@@ -162,62 +162,57 @@ def dashboard():
         status_counts[status] = count
 
     # ========== VENDAS POR CATEGORIA (CORRIGIDO) ==========
-    try:
-        category_sales = (
-            db.session.query(
-                Category.name,
-                func.coalesce(
-                    func.sum(OrderItem.unit_price * OrderItem.quantity), 0
-                ).label("total"),
-            )
-            .join(OrderItem, OrderItem.product_id == Product.id)
-            .join(Category, Category.id == Product.category_id)
-            .join(Order, Order.id == OrderItem.order_id)
-            .filter(
-                Order.status.in_(["pago", "enviado", "entregue"]),
-                Order.created_at >= days_ago,
-            )
-            .group_by(Category.id, Category.name)
-            .order_by(func.sum(OrderItem.unit_price * OrderItem.quantity).desc())
-            .limit(5)
-            .all()
+try:
+    category_sales = (
+        db.session.query(
+            Category.name,
+            func.coalesce(
+                func.sum(OrderItem.unit_price * OrderItem.quantity), 0
+            ).label("total"),
         )
-
-        cat_labels = [c[0] for c in category_sales if c[0]]
-        cat_data = [float(c[1]) for c in category_sales]
-    except Exception as e:
-        # Fallback para quando não há categorias ou erro na consulta
-        cat_labels = []
-        cat_data = []
-        print(f"Erro ao consultar vendas por categoria: {e}")
-
-    # ========== TOP PRODUTOS MAIS VENDIDOS ==========
-    top_products = (
-        db.session.query(Product, func.sum(OrderItem.quantity).label("total_sold"))
-        .join(OrderItem, OrderItem.product_id == Product.id)
-        .join(Order, Order.id == OrderItem.order_id)
+        .select_from(Category)  # ← Começar pela Category
+        .join(Product, Product.category_id == Category.id)  # ← JOIN correto
+        .join(OrderItem, OrderItem.product_id == Product.id)  # ← Depois OrderItem
+        .join(Order, Order.id == OrderItem.order_id)  # ← Depois Order
         .filter(
             Order.status.in_(["pago", "enviado", "entregue"]),
             Order.created_at >= days_ago,
         )
+        .group_by(Category.id, Category.name)
+        .order_by(func.sum(OrderItem.unit_price * OrderItem.quantity).desc())
+        .limit(5)
+        .all()
+    )
+
+    # ========== TOP PRODUTOS MAIS VENDIDOS ==========
+top_products = (
+    db.session.query(Product, func.sum(OrderItem.quantity).label("total_sold"))
+    .select_from(Product)  # ← Adicionar esta linha
+    .join(OrderItem, OrderItem.product_id == Product.id)
+    .join(Order, Order.id == OrderItem.order_id)
+    .filter(
+        Order.status.in_(["pago", "enviado", "entregue"]),
+        Order.created_at >= days_ago,
+    )
+    .group_by(Product.id)
+    .order_by(func.sum(OrderItem.quantity).desc())
+    .limit(5)
+    .all()
+)
+
+# Se não houver produtos vendidos no período, mostrar os mais vendidos de todos os tempos
+if not top_products:
+    top_products = (
+        db.session.query(Product, func.sum(OrderItem.quantity).label("total_sold"))
+        .select_from(Product)  # ← Adicionar também aqui
+        .join(OrderItem, OrderItem.product_id == Product.id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .filter(Order.status.in_(["pago", "enviado", "entregue"]))
         .group_by(Product.id)
         .order_by(func.sum(OrderItem.quantity).desc())
         .limit(5)
         .all()
     )
-
-    # Se não houver produtos vendidos no período, mostrar os mais vendidos de todos os tempos
-    if not top_products:
-        top_products = (
-            db.session.query(Product, func.sum(OrderItem.quantity).label("total_sold"))
-            .join(OrderItem, OrderItem.product_id == Product.id)
-            .join(Order, Order.id == OrderItem.order_id)
-            .filter(Order.status.in_(["pago", "enviado", "entregue"]))
-            .group_by(Product.id)
-            .order_by(func.sum(OrderItem.quantity).desc())
-            .limit(5)
-            .all()
-        )
 
     # ========== PEDIDOS RECENTES ==========
     recent_orders = Order.query.order_by(Order.created_at.desc()).limit(8).all()
