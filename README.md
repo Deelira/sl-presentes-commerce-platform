@@ -46,50 +46,52 @@ Sistema completo em **Flask + SQLAlchemy + PostgreSQL/SQLite**, com loja virtual
 
 bash
 git clone https://github.com/Deelira/sl-presentes-commerce-platform.git
-cd sl-presentes-commerce-platform
+cd sl-presentes-commerce-platform  
 
 ### 2. Crie o ambiente virtual
 python -m venv venv
-source venv/bin/activate          # Linux/Mac
-# venv\Scripts\activate           # Windows
+source venv/bin/activate          # Linux/Mac  
+# venv\Scripts\activate           # Windows  
 
 ### 3. Instale dependências
-pip install -r requirements.txt
+pip install -r requirements.txt  
 
 ### 4. Configure variáveis de ambiente
-cp .env.example .env
+cp .env.example .env  
+
 # Edite .env com suas configurações
-SECRET_KEY=sua-chave-secreta-aqui
-DATABASE_URL=sqlite:///instance/app.db  # ou postgresql://...
-INIT_ADMIN_EMAIL=admin@exemplo.com
-INIT_ADMIN_PASSWORD=admin123
+
+SECRET_KEY=sua-chave-secreta-aqui  
+DATABASE_URL=sqlite:///instance/app.db  # ou postgresql://...  
+INIT_ADMIN_EMAIL=admin@exemplo.com  
+INIT_ADMIN_PASSWORD=admin123  
 
 ### 5. Inicialize o banco de dados
 # Cria tabelas e usuários padrão
-python init_db.py
+python init_db.py  
 
 ### 6. Execute o sistema
-python app.py
+python app.py  
 
-Contas de teste (criadas automaticamente)
-Tipo	Email	Senha
-Admin	admin@exemplo.com	admin123
-Cliente	cliente@exemplo.com	cliente123
+Contas de teste (criadas automaticamente)  
+Tipo	Email	Senha  
+Admin	admin@exemplo.com	admin123  
+Cliente	cliente@exemplo.com	cliente123  
 
 
 # Recriar banco com dados de exemplo
-python init_db.py
+python init_db.py  
 
 # Criar migrações do banco
-flask db init
-flask db migrate -m "mensagem"
-flask db upgrade
+flask db init  
+flask db migrate -m "mensagem"  
+flask db upgrade  
 
 # Rodar em modo debug
-python app.py
+python app.py  
 
 # Produção com Gunicorn
-gunicorn -w 4 -b 0.0.0.0:8000 "app:create_app()"
+gunicorn -w 4 -b 0.0.0.0:8000 "app:create_app()"  
 
 # Testar conexão com banco
 python -c "from app import create_app; app=create_app(); print('OK')"
