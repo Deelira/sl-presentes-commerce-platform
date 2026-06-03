@@ -2,7 +2,7 @@ import hashlib
 import hmac
 import io
 
-from app import csrf
+from extensions import csrf
 from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for, abort, send_file
 from flask_login import current_user, login_required
 
@@ -53,19 +53,24 @@ def index():
     if form.validate_on_submit():
         try:
             with db.session.begin_nested():
+                # PRIMEIRO: Verificar todos os produtos e estoque
                 for it in items:
                     prod = db.session.get(Product, it["id"])
+                    
+                    # Verificar se o produto existe
                     if not prod:
                         flash(f"Produto '{it['name']}' não encontrado.", "danger")
                         return redirect(url_for("cart.view"))
-
+                    
+                    # Verificar estoque
                     if prod.stock < it["qty"]:
                         flash(
                             f"Estoque insuficiente para '{prod.name}'. Disponível: {prod.stock} unidades.",
                             "danger",
                         )
                         return redirect(url_for("cart.view"))
-
+                
+                # SEGUNDO: Criar o pedido
                 order = Order(
                     code=generate_order_code(),
                     user_id=current_user.id,
@@ -83,12 +88,13 @@ def index():
                     status="pendente",
                 )
                 db.session.add(order)
-                db.session.flush()
-
+                db.session.flush()  # Para obter o ID do pedido
+                
+                # TERCEIRO: Adicionar itens e atualizar estoque
                 for it in items:
                     prod = db.session.get(Product, it["id"])
-                    prod.stock -= it["qty"]
-
+                    prod.stock -= it["qty"]  # Atualizar estoque
+                    
                     db.session.add(
                         OrderItem(
                             order_id=order.id,
@@ -100,17 +106,21 @@ def index():
                             quantity=it["qty"],
                         )
                     )
-
+                
+                # QUARTO: Atualizar CPF do usuário se necessário
                 if not current_user.cpf and form.cpf.data:
                     current_user.cpf = form.cpf.data
                     db.session.add(current_user)
-
+            
+            # Commit fora do begin_nested
             db.session.commit()
             cart_service.clear()
             flash("Pedido realizado com sucesso!", "success")
             return redirect(url_for("checkout.success", code=order.code))
-        except Exception:
+            
+        except Exception as e:
             db.session.rollback()
+            print(f"Erro ao criar pedido: {str(e)}")  # Log do erro
             flash("Não foi possível concluir o pedido. Tente novamente.", "danger")
             return redirect(url_for("cart.view"))
 
@@ -172,9 +182,9 @@ def cancel_order(order_id):
 
 
 # 🔥 WEBHOOK PARA CONFIRMAR PAGAMENTO PIX
-@csrf.exempt
-@checkout_bp.route("/webhook/pix", methods=["POST"])
-def pix_webhook():
+#@csrf.exempt
+#@checkout_bp.route("/webhook/pix", methods=["POST"])
+#def pix_webhook():
     """Recebe confirmação de pagamento do gateway."""
     payload = request.get_data(cache=True)
 
@@ -217,3 +227,21 @@ def pix_webhook():
         ), 200
 
     return jsonify({"status": "ignored", "order_status": order.status}), 200
+
+# CONFIRMAR PAGAMENTO MANUALMENTE (PARA CASOS ONDE O CLIENTE AVISA QUE PAGOU, MAS O WEBHOOK NÃO FUNCIONOU)
+@checkout_bp.route("/confirmar-pagamento/<code>", methods=["POST"])
+@login_required
+def confirm_payment(code):
+    """Confirma pagamento manualmente (para quando o cliente avisa que pagou)."""
+    order = Order.query.filter_by(code=code, user_id=current_user.id).first_or_404()
+    
+    if order.status == "pendente":
+        order.status = "pago"
+        order.paid_at = db.func.now()
+        db.session.commit()
+        flash("✅ Pagamento confirmado! Seu pedido será processado.", "success")
+        # Redirecionar para a página de sucesso do checkout
+        return redirect(url_for("checkout.success", code=order.code))
+    else:
+        flash(f"⚠️ Pedido já está com status: {order.status}", "warning")
+        return redirect(url_for("account.order_detail", code=order.code))

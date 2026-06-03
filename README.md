@@ -51,7 +51,7 @@ cd sl-presentes-commerce-platform
 ### 2. Crie o ambiente virtual
 python -m venv venv  
 source venv/bin/activate          # Linux/Mac  
-# venv\Scripts\activate           # Windows  
+venv/Scripts/activate           # Windows  
 
 ### 3. Instale dependências
 pip install -r requirements.txt  

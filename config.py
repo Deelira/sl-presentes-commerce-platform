@@ -15,7 +15,7 @@ UNSAFE_SECRET_VALUES = {
 
 def _normalize_database_uri(uri: str | None) -> str:
     if not uri:
-        return f"sqlite:///{BASE_DIR / 'instance' / 'app.db'}"
+        return f"sqlite:///{BASE_DIR / 'instance' / 'sl-presentes.db'}"
 
     if uri.startswith("sqlite:///") and not uri.startswith("sqlite:////"):
         relative_path = uri.replace("sqlite:///", "", 1)
