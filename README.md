@@ -76,55 +76,8 @@ Tipo	Email	Senha
 Admin	admin@exemplo.com	admin123
 Cliente	cliente@exemplo.com	cliente123
 
-sl-presentes-commerce-platform/
-├── app.py                  # Factory + registro blueprints
-├── config.py               # Configurações por ambiente
-├── init_db.py              # Seed + criação admin
-├── requirements.txt        # Dependências
-├── .env.example            # Exemplo de variáveis
-├── .gitignore
-│
-├── models/                 # Modelos SQLAlchemy
-│   ├── user.py
-│   ├── product.py
-│   ├── category.py
-│   ├── order.py
-│   ├── order_item.py
-│   ├── supplier.py
-│   └── order_request.py
-│
-├── routes/                 # Blueprints (rotas)
-│   ├── shop.py             # Catálogo, produtos
-│   ├── auth.py             # Login, registro
-│   ├── cart.py             # Carrinho de compras
-│   ├── checkout.py         # Finalização e pagamentos
-│   ├── account.py          # Perfil do cliente
-│   └── admin.py            # Painel administrativo
-│
-├── services/               # Regras de negócio
-│   ├── payment.py          # Integração Mercado Pago
-│   └── ai_product_service.py # IA para descrições
-│
-├── admin/                  # Formulários do admin
-├── auth/                   # Decorators + forms auth
-├── utils/                  # Helpers (slug, upload, etc.)
-│
-├── templates/              # Templates Jinja2
-│   ├── base.html
-│   ├── shop/
-│   ├── admin/
-│   ├── auth/
-│   └── account/
-│
-├── static/                 # CSS, JS, imagens
-│   ├── css/
-│   ├── js/
-│   └── uploads/            # Imagens de produtos
-│
-└── instance/               # Banco SQLite (dev)
-    └── app.db
 
-    # Recriar banco com dados de exemplo
+# Recriar banco com dados de exemplo
 python init_db.py
 
 # Criar migrações do banco
